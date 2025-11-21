@@ -1,0 +1,12 @@
+# Maven build output
+target/
+
+# IDE metadata
+.idea/
+.vscode/
+*.iml
+.classpath
+.project
+
+# OS cruft
+.DS_Store
