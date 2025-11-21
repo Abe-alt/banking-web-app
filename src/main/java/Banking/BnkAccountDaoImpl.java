@@ -8,9 +8,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class BnkAccountDaoImpl implements AccountDAO {
-    private static final String JDBC_URL = "jdbc:mysql://localhost:3306/dbName";
-    private static final String USERNAME = "root";
-    private static final String PASSWORD = "putpasswordhere";
+    private static final String JDBC_URL = System.getenv().getOrDefault("DB_URL", "jdbc:mysql://localhost:3306/banking_db");
+    private static final String USERNAME = System.getenv().getOrDefault("DB_USERNAME", "bank_user");
+    private static final String PASSWORD = System.getenv().getOrDefault("DB_PASSWORD", "user123");
 
     @Override
     public void createAccount(Account account) {
