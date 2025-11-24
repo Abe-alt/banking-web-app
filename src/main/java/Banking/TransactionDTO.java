@@ -4,6 +4,9 @@ public class TransactionDTO {
     private int accountNumber;
     private double amount;
 
+    public TransactionDTO() {
+    }
+
     // Constructor
     public TransactionDTO(int accountNumber, double amount) {
         this.accountNumber = accountNumber;

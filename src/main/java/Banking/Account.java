@@ -7,6 +7,9 @@ package Banking;
 	    private String customerName;
 	    private double balance;
 
+	    public Account() {
+	    }
+
 	    // Constructor
 	    public Account(int accountNumber, String customerName, double balance) {
 	        this.accountNumber = accountNumber;

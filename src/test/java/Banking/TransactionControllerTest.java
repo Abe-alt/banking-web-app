@@ -1,60 +1,54 @@
 package Banking;
-
+import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
-import java.util.Map;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class TransactionControllerTest {
 
     private InMemoryAccountDao accountDAO;
-    private CapturingTransactionView view;
-    private TransactionController controller;
+    private TransactionService service;
 
     @BeforeEach
     void setUp() {
         accountDAO = new InMemoryAccountDao();
-        view = new CapturingTransactionView();
-        controller = new TransactionController(accountDAO, view);
+        service = new TransactionService(accountDAO);
     }
 
     @Test
     void depositIncreasesBalance() {
-        controller.createAccount(new Account(1, "Alice", 100.0));
+        service.createAccount(new Account(1, "Alice", 100.0));
 
-        controller.makeDeposit(1, 50.0);
+        service.deposit(1, 50.0);
 
         assertEquals(150.0, accountDAO.getBalance(1));
     }
 
     @Test
     void withdrawalDecreasesBalanceWhenSufficient() {
-        controller.createAccount(new Account(2, "Bob", 200.0));
+        service.createAccount(new Account(2, "Bob", 200.0));
 
-        controller.makeWithdrawal(2, 75.0);
+        service.withdraw(2, 75.0);
 
         assertEquals(125.0, accountDAO.getBalance(2));
     }
 
     @Test
     void withdrawalFailsWhenInsufficient() {
-        controller.createAccount(new Account(3, "Carol", 50.0));
+        service.createAccount(new Account(3, "Carol", 50.0));
 
-        controller.makeWithdrawal(3, 60.0);
-
-        // Balance unchanged
+        assertThrows(IllegalArgumentException.class, () -> service.withdraw(3, 60.0));
         assertEquals(50.0, accountDAO.getBalance(3));
     }
 
     @Test
     void updateBalanceSetsExactValue() {
-        controller.createAccount(new Account(4, "Dan", 10.0));
+        service.createAccount(new Account(4, "Dan", 10.0));
 
-        controller.updateBalance(4, 999.0);
+        service.updateBalance(4, 999.0);
 
         assertEquals(999.0, accountDAO.getBalance(4));
     }
@@ -85,19 +79,13 @@ class TransactionControllerTest {
             }
             return acc.getBalance();
         }
-    }
-
-    // Captures messages instead of printing. Extend later to assert messages.
-    private static class CapturingTransactionView extends TransactionView {
-        private String lastMessage;
-
         @Override
-        public void displayMessage(String message) {
-            this.lastMessage = message;
-        }
-
-        public String getLastMessage() {
-            return lastMessage;
+        public Account getAccount(int accountNumber) {
+            Account acc = store.get(accountNumber);
+            if (acc == null) {
+                throw new IllegalArgumentException("Account not found: " + accountNumber);
+            }
+            return acc;
         }
     }
 }
