@@ -12,6 +12,19 @@ export type CreateAccountPayload = {
   balance: number;
 };
 
+async function readError(res: Response, fallback: string): Promise<string> {
+  const body = await res.text();
+  try {
+    const data = JSON.parse(body);
+    if (typeof data?.error === "string") return data.error;
+    if (typeof data?.message === "string") return data.message;
+  } catch {
+    // ignore parse errors
+  }
+  if (body) return body;
+  return `${fallback} (HTTP ${res.status})`;
+}
+
 export async function createAccount(payload: CreateAccountPayload): Promise<Account> {
   const res = await fetch(`${API_BASE}/accounts`, {
     method: "POST",
@@ -49,6 +62,8 @@ export async function withdraw(accountNumber: number, amount: number): Promise<A
 
 export async function getBalance(accountNumber: number): Promise<Account> {
   const res = await fetch(`${API_BASE}/accounts/${accountNumber}`);
-  if (!res.ok) throw new Error("Failed to fetch balance");
+  if (!res.ok) {
+    throw new Error(await readError(res, "Account not found"));
+  }
   return res.json();
 }
