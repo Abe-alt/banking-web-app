@@ -17,16 +17,11 @@ export default function Home() {
     customerName: "",
     balance: "",
   });
-  const [depositForm, setDepositForm] = useState({
-    accountNumber: "",
-    amount: "",
-  });
-  const [withdrawForm, setWithdrawForm] = useState({
-    accountNumber: "",
-    amount: "",
-  });
-  const [lookupId, setLookupId] = useState("");
-  const [lastAccount, setLastAccount] = useState<Account | null>(null);
+  const [loginId, setLoginId] = useState("");
+  const [depositAmount, setDepositAmount] = useState("");
+  const [withdrawAmount, setWithdrawAmount] = useState("");
+  const [activeAccount, setActiveAccount] = useState<Account | null>(null);
+  const [view, setView] = useState<"login" | "create" | "dashboard">("login");
   const [status, setStatus] = useState<Status>(null);
   const [loading, setLoading] = useState(false);
 
@@ -42,7 +37,10 @@ export default function Home() {
         customerName: createForm.customerName.trim(),
         balance: parseNumber(createForm.balance),
       });
-      setLastAccount(account);
+      setActiveAccount(account);
+      setView("dashboard");
+      setDepositAmount("");
+      setWithdrawAmount("");
       setStatus({ kind: "success", message: "Account created." });
     } catch (err) {
       setStatus({ kind: "error", message: (err as Error).message });
@@ -53,14 +51,19 @@ export default function Home() {
 
   async function handleDeposit(e: FormEvent) {
     e.preventDefault();
+    if (!activeAccount) {
+      setStatus({ kind: "error", message: "Login to an account first." });
+      return;
+    }
     setLoading(true);
     setStatus(null);
     try {
       const account = await deposit(
-        parseNumber(depositForm.accountNumber),
-        parseNumber(depositForm.amount)
+        activeAccount.accountNumber,
+        parseNumber(depositAmount)
       );
-      setLastAccount(account);
+      setActiveAccount(account);
+      setDepositAmount("");
       setStatus({ kind: "success", message: "Deposit successful." });
     } catch (err) {
       setStatus({ kind: "error", message: (err as Error).message });
@@ -71,14 +74,19 @@ export default function Home() {
 
   async function handleWithdraw(e: FormEvent) {
     e.preventDefault();
+    if (!activeAccount) {
+      setStatus({ kind: "error", message: "Login to an account first." });
+      return;
+    }
     setLoading(true);
     setStatus(null);
     try {
       const account = await withdraw(
-        parseNumber(withdrawForm.accountNumber),
-        parseNumber(withdrawForm.amount)
+        activeAccount.accountNumber,
+        parseNumber(withdrawAmount)
       );
-      setLastAccount(account);
+      setActiveAccount(account);
+      setWithdrawAmount("");
       setStatus({ kind: "success", message: "Withdrawal successful." });
     } catch (err) {
       setStatus({ kind: "error", message: (err as Error).message });
@@ -92,14 +100,44 @@ export default function Home() {
     setLoading(true);
     setStatus(null);
     try {
-      const account = await getBalance(parseNumber(lookupId));
-      setLastAccount(account);
-      setStatus({ kind: "success", message: "Account fetched." });
+      const account = await getBalance(parseNumber(loginId));
+      setActiveAccount(account);
+      setView("dashboard");
+      setDepositAmount("");
+      setWithdrawAmount("");
+      setStatus({ kind: "success", message: "Logged in." });
     } catch (err) {
       setStatus({ kind: "error", message: (err as Error).message });
     } finally {
       setLoading(false);
     }
+  }
+
+  async function handleRefresh() {
+    if (!activeAccount) {
+      setStatus({ kind: "error", message: "No account selected to refresh." });
+      return;
+    }
+    setLoading(true);
+    setStatus(null);
+    try {
+      const account = await getBalance(activeAccount.accountNumber);
+      setActiveAccount(account);
+      setStatus({ kind: "success", message: "Balance refreshed." });
+    } catch (err) {
+      setStatus({ kind: "error", message: (err as Error).message });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function handleLogout() {
+    setActiveAccount(null);
+    setView("login");
+    setStatus(null);
+    setLoginId("");
+    setDepositAmount("");
+    setWithdrawAmount("");
   }
 
   return (
@@ -110,11 +148,11 @@ export default function Home() {
             Banking
           </p>
           <h1 className="mt-2 text-4xl font-semibold tracking-tight">
-            Manage accounts
+            Access your account
           </h1>
           <p className="mt-2 max-w-2xl text-slate-300">
-            Create accounts, deposit, withdraw, and check balances against the
-            backend API at <code className="text-slate-100">:8080/api</code>.
+            Log in with an account number or open a new account, then manage
+            deposits and withdrawals with the menu.
           </p>
         </header>
 
@@ -130,111 +168,144 @@ export default function Home() {
           </div>
         )}
 
-        <div className="grid gap-6 md:grid-cols-2">
-          <Card title="Create account" description="Open a new account.">
-            <form className="space-y-3" onSubmit={handleCreate}>
-              <Input
-                label="Account number"
-                type="number"
-                value={createForm.accountNumber}
-                onChange={(v) =>
-                  setCreateForm((f) => ({ ...f, accountNumber: v }))
-                }
-                required
-              />
-              <Input
-                label="Customer name"
-                value={createForm.customerName}
-                onChange={(v) =>
-                  setCreateForm((f) => ({ ...f, customerName: v }))
-                }
-                required
-              />
-              <Input
-                label="Initial balance"
-                type="number"
-                value={createForm.balance}
-                onChange={(v) => setCreateForm((f) => ({ ...f, balance: v }))}
-                required
-              />
-              <Button type="submit" disabled={loading}>
-                {loading ? "Working..." : "Create"}
-              </Button>
-            </form>
-          </Card>
+        {view !== "dashboard" && (
+          <div className="grid gap-6 md:grid-cols-2">
+            {view === "login" && (
+              <Card title="Login" description="Enter your account number to continue.">
+                <form className="space-y-4" onSubmit={handleLookup}>
+                  <Input
+                    label="Account number"
+                    type="number"
+                    value={loginId}
+                    onChange={setLoginId}
+                    required
+                  />
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <Button type="submit" disabled={loading}>
+                      {loading ? "Working..." : "Login"}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => {
+                        setView("create");
+                        setStatus(null);
+                      }}
+                    >
+                      Create account
+                    </Button>
+                  </div>
+                </form>
+              </Card>
+            )}
 
-          <Card title="Deposit" description="Add funds to an account.">
-            <form className="space-y-3" onSubmit={handleDeposit}>
-              <Input
-                label="Account number"
-                type="number"
-                value={depositForm.accountNumber}
-                onChange={(v) =>
-                  setDepositForm((f) => ({ ...f, accountNumber: v }))
-                }
-                required
-              />
-              <Input
-                label="Amount"
-                type="number"
-                value={depositForm.amount}
-                onChange={(v) => setDepositForm((f) => ({ ...f, amount: v }))}
-                required
-              />
-              <Button type="submit" disabled={loading}>
-                {loading ? "Working..." : "Deposit"}
-              </Button>
-            </form>
-          </Card>
+            {view === "create" && (
+              <Card title="Create account" description="Open a new account to start banking.">
+                <form className="space-y-3" onSubmit={handleCreate}>
+                  <Input
+                    label="Account number"
+                    type="number"
+                    value={createForm.accountNumber}
+                    onChange={(v) =>
+                      setCreateForm((f) => ({ ...f, accountNumber: v }))
+                    }
+                    required
+                  />
+                  <Input
+                    label="Customer name"
+                    value={createForm.customerName}
+                    onChange={(v) =>
+                      setCreateForm((f) => ({ ...f, customerName: v }))
+                    }
+                    required
+                  />
+                  <Input
+                    label="Initial balance"
+                    type="number"
+                    value={createForm.balance}
+                    onChange={(v) => setCreateForm((f) => ({ ...f, balance: v }))}
+                    required
+                  />
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <Button type="submit" disabled={loading}>
+                      {loading ? "Working..." : "Create and continue"}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => {
+                        setView("login");
+                        setStatus(null);
+                      }}
+                    >
+                      Back to login
+                    </Button>
+                  </div>
+                </form>
+              </Card>
+            )}
+          </div>
+        )}
 
-          <Card title="Withdraw" description="Remove funds from an account.">
-            <form className="space-y-3" onSubmit={handleWithdraw}>
-              <Input
-                label="Account number"
-                type="number"
-                value={withdrawForm.accountNumber}
-                onChange={(v) =>
-                  setWithdrawForm((f) => ({ ...f, accountNumber: v }))
-                }
-                required
-              />
-              <Input
-                label="Amount"
-                type="number"
-                value={withdrawForm.amount}
-                onChange={(v) => setWithdrawForm((f) => ({ ...f, amount: v }))}
-                required
-              />
-              <Button type="submit" disabled={loading}>
-                {loading ? "Working..." : "Withdraw"}
-              </Button>
-            </form>
-          </Card>
-
-          <Card title="View balance" description="Fetch account details.">
-            <form className="space-y-3" onSubmit={handleLookup}>
-              <Input
-                label="Account number"
-                type="number"
-                value={lookupId}
-                onChange={setLookupId}
-                required
-              />
-              <Button type="submit" disabled={loading}>
-                {loading ? "Working..." : "View"}
-              </Button>
-            </form>
-          </Card>
-        </div>
-
-        {lastAccount && (
-          <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4 text-sm text-slate-100">
-            <div className="text-xs uppercase tracking-[0.25em] text-slate-400">
-              Last result
+        {view === "dashboard" && activeAccount && (
+          <div className="grid gap-6 lg:grid-cols-3">
+            <div className="lg:col-span-1">
+              <Card
+                title="Account details"
+                description="You are signed in. Refresh or switch accounts anytime."
+              >
+                <div className="rounded-lg border border-slate-800 bg-slate-950/60 px-4 py-3 text-sm text-slate-100">
+                  <div className="font-mono text-base">
+                    #{activeAccount.accountNumber}
+                  </div>
+                  <div className="mt-1 text-lg font-semibold">
+                    {activeAccount.customerName || "—"}
+                  </div>
+                  <div className="mt-2 text-emerald-400">
+                    ${activeAccount.balance.toFixed(2)}
+                  </div>
+                </div>
+                <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+                  <Button type="button" onClick={handleRefresh} disabled={loading}>
+                    {loading ? "Refreshing..." : "Refresh balance"}
+                  </Button>
+                  <Button type="button" variant="ghost" onClick={handleLogout}>
+                    Switch account
+                  </Button>
+                </div>
+              </Card>
             </div>
-            <div className="mt-2 font-mono text-base">
-              #{lastAccount.accountNumber} · {lastAccount.customerName ?? "—"} ·$
-              {lastAccount.balance.toFixed(2)}
+
+            <div className="lg:col-span-2 grid gap-6 md:grid-cols-2">
+              <Card title="Deposit" description="Add funds to this account.">
+                <form className="space-y-3" onSubmit={handleDeposit}>
+                  <Input
+                    label="Amount"
+                    type="number"
+                    value={depositAmount}
+                    onChange={setDepositAmount}
+                    required
+                  />
+                  <Button type="submit" disabled={loading}>
+                    {loading ? "Working..." : "Deposit"}
+                  </Button>
+                </form>
+              </Card>
+
+              <Card title="Withdraw" description="Remove funds from this account.">
+                <form className="space-y-3" onSubmit={handleWithdraw}>
+                  <Input
+                    label="Amount"
+                    type="number"
+                    value={withdrawAmount}
+                    onChange={setWithdrawAmount}
+                    required
+                  />
+                  <Button type="submit" disabled={loading}>
+                    {loading ? "Working..." : "Withdraw"}
+                  </Button>
+                </form>
+              </Card>
             </div>
           </div>
         )}
@@ -294,16 +365,26 @@ function Button({
   children,
   type = "button",
   disabled,
+  onClick,
+  variant = "primary",
 }: {
   children: React.ReactNode;
   type?: "button" | "submit" | "reset";
   disabled?: boolean;
+  onClick?: () => void;
+  variant?: "primary" | "ghost";
 }) {
+  const styles =
+    variant === "ghost"
+      ? "border border-slate-700 bg-transparent text-white hover:border-slate-500"
+      : "bg-emerald-500 text-black hover:bg-emerald-400";
+
   return (
     <button
       type={type}
       disabled={disabled}
-      className="inline-flex w-full items-center justify-center rounded-lg bg-emerald-500 px-4 py-2 text-sm font-semibold text-black transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:bg-slate-600 disabled:text-slate-300"
+      onClick={onClick}
+      className={`inline-flex w-full items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:border-slate-700 disabled:bg-slate-700 disabled:text-slate-300 ${styles}`}
     >
       {children}
     </button>
