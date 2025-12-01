@@ -3,6 +3,7 @@ package Banking;
 import org.springframework.stereotype.Service;
 
 @Service
+// Business rules for account operations layered over the DAO.
 public class TransactionService {
 
     private final AccountDAO accountDAO;
@@ -53,6 +54,7 @@ public class TransactionService {
 
     private void validateAmount(double amount) {
         if (amount <= 0) {
+            // Block zero/negative transfers before hitting the database.
             throw new IllegalArgumentException("Amount must be positive");
         }
     }

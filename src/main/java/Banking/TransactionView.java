@@ -1,6 +1,7 @@
 
 package Banking;
 
+// Legacy console-only view helper for CLI flows.
 public class TransactionView {
 	
 	

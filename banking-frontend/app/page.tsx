@@ -12,16 +12,21 @@ import {
 type Status = { kind: "success" | "error"; message: string } | null;
 
 export default function Home() {
+  // Auth + onboarding state
   const [createForm, setCreateForm] = useState({
     accountNumber: "",
     customerName: "",
     balance: "",
   });
   const [loginId, setLoginId] = useState("");
+  const [view, setView] = useState<"login" | "create" | "dashboard">("login");
+
+  // Active account + money movement
   const [depositAmount, setDepositAmount] = useState("");
   const [withdrawAmount, setWithdrawAmount] = useState("");
   const [activeAccount, setActiveAccount] = useState<Account | null>(null);
-  const [view, setView] = useState<"login" | "create" | "dashboard">("login");
+
+  // UX state
   const [status, setStatus] = useState<Status>(null);
   const [loading, setLoading] = useState(false);
 

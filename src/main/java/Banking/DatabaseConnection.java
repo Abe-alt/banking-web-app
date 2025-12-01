@@ -5,6 +5,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
+// Legacy manual JDBC helper (superseded by Spring Boot's datasource).
 public class DatabaseConnection {
     private static final String JDBC_URL = "jdbc:mysql://localhost:3306/your_database_name";
     private static final String USERNAME = "your_username";

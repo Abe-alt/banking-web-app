@@ -1,5 +1,6 @@
 package Banking;
 
+// Persistence contract for account CRUD/balance operations.
 public interface AccountDAO {
     void createAccount(Account account);
     void updateBalance(int accountNumber, double newBalance);

@@ -6,10 +6,12 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 
 @Repository
+// JdbcTemplate-backed implementation of AccountDAO.
 public class BnkAccountDaoImpl implements AccountDAO {
 
     private final JdbcTemplate jdbcTemplate;
 
+    // Maps DB rows to Account domain objects.
     private final RowMapper<Account> accountRowMapper = (rs, rowNum) ->
             new Account(
                     rs.getInt("account_number"),
@@ -39,6 +41,7 @@ public class BnkAccountDaoImpl implements AccountDAO {
                 accountNumber
         );
         if (updated == 0) {
+            // Surface a domain-friendly error when no row was updated.
             throw new AccountNotFoundException("Account not found: " + accountNumber);
         }
     }

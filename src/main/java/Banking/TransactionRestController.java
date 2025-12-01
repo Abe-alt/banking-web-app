@@ -17,6 +17,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/accounts")
 @CrossOrigin(origins = "http://localhost:3000")
+// HTTP layer exposing account CRUD/transactions with basic validation responses.
 public class TransactionRestController {
 
     private final TransactionService transactionService;

@@ -1,5 +1,6 @@
 package Banking;
 
+// Request payload for deposit/withdraw/update balance operations.
 public class TransactionDTO {
     private int accountNumber;
     private double amount;

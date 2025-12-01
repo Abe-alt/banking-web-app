@@ -2,6 +2,7 @@ package Banking;
 
 	
 	
+	// Domain model for a bank account record.
 	public class Account {
 	    private int accountNumber;
 	    private String customerName;
