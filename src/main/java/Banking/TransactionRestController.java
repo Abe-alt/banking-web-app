@@ -16,7 +16,13 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/accounts")
-@CrossOrigin(origins = "http://localhost:3000")
+// @CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(
+    origins = { 
+        "http://localhost:3000",
+        "https://banking-web-app-uu95.vercel.app"
+    }
+)
 // HTTP layer exposing account CRUD/transactions with basic validation responses.
 public class TransactionRestController {
 
