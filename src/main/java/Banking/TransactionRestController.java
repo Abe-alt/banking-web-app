@@ -20,7 +20,8 @@ import java.util.Map;
 @CrossOrigin(
     origins = { 
         "http://localhost:3000",
-        "https://banking-web-app-uu95.vercel.app"
+        "https://banking-web-app-uu95.vercel.app",
+        "https://mjabank.vercel.app"
     }
 )
 // HTTP layer exposing account CRUD/transactions with basic validation responses.
