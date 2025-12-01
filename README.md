@@ -34,17 +34,26 @@ export DB_PASSWORD="user123"
 ```
 `.env` files are not auto-loaded; `set -a; source .env; set +a` will export them if you prefer.
 
-## Run the REST API
-Start the Spring Boot service on port 8080:
-```bash
-mvn spring-boot:run
-```
-Base URL: `http://localhost:8080/api`
-- `POST /accounts` — `{ "accountNumber": 1, "customerName": "Alice", "balance": 100.0 }`
-- `POST /accounts/{accountNumber}/deposit` — `{ "amount": 50 }`
-- `POST /accounts/{accountNumber}/withdraw` — `{ "amount": 20 }`
-- `PUT /accounts/{accountNumber}/balance` — `{ "amount": 999 }`
-- `GET /accounts/{accountNumber}` — returns the account (with balance)
+## How to run locally
+- Backend: set DB env vars, ensure MySQL + `accounts` table, then `mvn spring-boot:run`.
+- Frontend (Next.js): `cd banking-frontend && npm run dev` (uses port 3000, calls backend at 8080).
+
+## Screenshots
+
+- Login Page : 
+![Login or create account](docs/screenshots/login.png)
+
+- Dashboard: 
+![Dashboard with actions](docs/screenshots/dashboard.png)
+
+
+## API quick curl checks
+- Create: `curl -X POST http://localhost:8080/api/accounts -H "Content-Type: application/json" -d '{"accountNumber":1,"customerName":"Alice","balance":100}'`
+- Deposit: `curl -X POST http://localhost:8080/api/accounts/1/deposit -H "Content-Type: application/json" -d '{"amount":50}'`
+- Withdraw: `curl -X POST http://localhost:8080/api/accounts/1/withdraw -H "Content-Type: application/json" -d '{"amount":20}'`
+- View: `curl http://localhost:8080/api/accounts/1`
+
+
 
 ## Optional CLI
 Run the interactive console (non-web):
@@ -57,8 +66,3 @@ Run unit tests (in-memory stub, no DB required):
 ```bash
 mvn test
 ```
-
-## Notes
-- REST main class: `Banking.BankingApplication`.
-- CLI main class: `Banking.BankingApp`.
-- If you hit Maven download permission issues, clear/fix your local `~/.m2` permissions.
