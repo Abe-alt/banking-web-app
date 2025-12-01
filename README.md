@@ -44,7 +44,7 @@ export DB_PASSWORD="user123"
 ![Login or create account](docs/screenshots/login.png)
 
 - Dashboard: 
-![Dashboard with actions](docs/screenshots/dashboard.png)
+![Dashboard with actions](docs/screenshots/Dashboard.png)
 
 
 ## API quick curl checks
